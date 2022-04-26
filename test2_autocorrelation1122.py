@@ -67,9 +67,9 @@ FRE = 60  # todo eachF [50,85,5]没有80，手动排着输
 # ACC = 5 # todo eachA [3,5,0.5]
 # 
 # path2 = 'D:\\guan2019\\1_disk\\f\\60Hz\\mode\\inactive\\'  # 60Hz
-path2 = 'D:\\guan2019\\1_disk\\f\\60Hz\\total\\'  # 60Hz
+# path2 = 'D:\\guan2019\\1_disk\\f\\60Hz\\total\\'  # 60Hz
 # path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\total\\'  # 5g 
-# path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\mode\\active_all0\\'  # 5g all0
+path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\mode\\active_all0\\'  # 5g all0
 # path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\mode\\inactive_select0\\'  # 5g select
 
 filename = [name for name in os.listdir(path2)]
@@ -143,17 +143,17 @@ for j in range(len(filename)):  #3,4):    #
         dy = deltay / 480 * 260
         dr = deltar / 480 * 260
 
-        if len(dx) > 5000: #10000:#
-            dx = dx[:5000]
+        if len(dx) > 10000: #10000:#
+            dx = dx[:10000]
             #
-            dy = dy[:3000]
+            dy = dy[:10000]
             # dy1 = dy[:900*3:3]+dy[1:900*3+1:3]+dy[2:900*3+2:3]
             # dy = dy1
 
             dr = dr[:5000]
             dtheta = dtheta[:5000]
 
-        v_t = dr #dy#(dx+dy)/2 # /(step/fps)  # 平动delta r
+        v_t = dy# /(step/fps)  # 平动delta r(dx+dy)/2 # dr #
         # v_t = dtheta #/(step/fps)  # 转动delta theta
 
 
@@ -227,17 +227,21 @@ for j in range(len(filename)):  #3,4):    #
     else:
         CORR_m = CORR_all
 
-    label.append(str(filename[j])+' g')
+    label.append(str(filename[j])+' Hz')
 
-    a = np.logspace(-3,3,100)
-    a_index = []
-    TAU_new = []
-    CORR_new = []
-    for i in a:
-        ind = find_nearest(tau, i)
-        a_index.append(ind)
-        TAU_new.append(tau[ind])#TAU[ind])
-        CORR_new.append(CORR_m[ind])# MSD[ind])
+    # a = np.logspace(-3,3,100)
+    # a_index = []
+    # TAU_new = []
+    # CORR_new = []
+    # for i in a:
+    #     ind = find_nearest(tau, i)
+    #     a_index.append(ind)
+    #     TAU_new.append(tau[ind])#TAU[ind])
+    #     CORR_new.append(CORR_m[ind])# MSD[ind])
+    
+    TAU_new = tau
+    CORR_new = CORR_m
+    
 
 
     # plt.plot(TAU_new, CORR_new,'o', markerfacecolor='none', alpha=0.75, color=colors[j], label=label[j])
@@ -259,17 +263,17 @@ time = np.around(np.arange(0, (len(v_t) ) * 1 / 150, 1 / 150), decimals=3)
 # ax.set_xscale('log')
 
 # # translational
-ax.set_ylabel('$C_{\Delta r}(t)$')
+ax.set_ylabel('$C_{\Delta x}(t)$')
 # ax.set_xlim((-0.01, 0.065)) # tlc
 # ax.xaxis.set_major_locator(MultipleLocator(0.02))
 # ax.xaxis.set_minor_locator(MultipleLocator(0.01))
 # ax.set_xlim((-0.01, 0.5)) # 60Hz
 # ax.xaxis.set_major_locator(MultipleLocator(0.1))
 # ax.xaxis.set_minor_locator(MultipleLocator(0.05))
-ax.set_xlim((-0.01, 0.25)) # 5g
+ax.set_xlim((-0.01, 10)) # 5g
 ax.set_ylim((-0.5, 1.2))
-ax.xaxis.set_major_locator(MultipleLocator(0.05))
-ax.xaxis.set_minor_locator(MultipleLocator(0.01))
+# ax.xaxis.set_major_locator(MultipleLocator(0.05))
+# ax.xaxis.set_minor_locator(MultipleLocator(0.01))
 # ax.set_ylim((-0.6,1.15))
 # ax.yaxis.set_major_locator(MultipleLocator(0.5))
 # ax.yaxis.set_minor_locator(MultipleLocator(0.1))
