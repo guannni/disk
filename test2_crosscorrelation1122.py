@@ -66,10 +66,10 @@ step = 1
 FRE = 60  # todo eachF [50,85,5]没有80，手动排着输
 # ACC = 5 # todo eachA [3,5,0.5]
 # 
-# path2 = 'D:\\guan2019\\1_disk\\f\\60Hz\\mode\\active\\'  # 60Hz
-path2 = 'D:\\guan2019\\1_disk\\f\\60Hz\\total\\'  # 60Hz
+# path2 = 'D:\\guan2019\\1_disk\\f\\60Hz\\mode\\inactive\\'  # 60Hz
+# path2 = 'D:\\guan2019\\1_disk\\f\\60Hz\\total\\'  # 60Hz
 # path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\total\\'  # 5g 
-# path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\mode\\active_all0\\'  # 5g all0
+path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\mode\\inactive_all0\\'  # 5g all0
 # path2 = 'D:\\guan2019\\1_disk\\a_full\\5\\mode\\inactive_select0\\'  # 5g select
 
 filename = [name for name in os.listdir(path2)]
@@ -151,51 +151,26 @@ for j in range(len(filename)):  #3,4):    #
             # dy = dy1
 
             dr = dr[:5000]
-            dtheta = dtheta[:5000]
+            dtheta = dtheta[:10000]
 
         v_t = dy# /(step/fps)  # 平动delta r(dx+dy)/2 # dr #
-        # v_t = dtheta #/(step/fps)  # 转动delta theta
+        v_r = dtheta #/(step/fps)  # 转动delta theta
+
+        # corr = np.sum((v_t*v_r))/(np.sqrt((np.sum(v_t**2))*(np.sum(v_r**2))))
+        # print(corr)
+
+        # corr = np.correlate(v_t, v_r, mode='same')
+        # corr = preprocessing.StandardScaler().fit_transform(corr.astype('float32').reshape(-1, 1))
+
+        # --
+        v_t = (v_t - np.mean(v_t)) / (np.std(v_t) * len(v_t))
+        v_r = (v_r - np.mean(v_r)) / (np.std(v_r))
+        corr = np.correlate(v_t, v_r, 'full')
+
+        time = np.around(np.arange(0, (len(corr)+1) *1 / 150, 1 / 150), decimals=3)[0:len(corr)]
 
 
-    # method 1 --my function-------
-        ac = autocorr(v_t)
-        nan = np.isnan(ac)
-        ac = ac[~nan]
-         # # rotational
-        # ac = ac[2:]
-        # # ac /= ac[0]
-        # ac = np.insert(ac,0,1.0)
-
-
-        # # ac = smooth(ac)
-        # # ac = ac[5:]
-        # # ac /= ac[0]
-
-    # # log-x axis
-    #     time = np.around(np.arange(0, (len(ac)+1) * 1 / 150, 1 / 150), decimals=3)[0:len(ac)]
-    #     a = np.logspace(-3,2,50)
-    #     a_index = []
-    #     time_new = []
-    #     ac_new = []
-    #     for j in a:
-    #         ind = find_nearest(time, j)
-    #         a_index.append(ind)
-    #         time_new.append(time[ind])
-    #         ac_new.append(ac[ind])
-
-    #     # plt.scatter(time_new[0:len(ac_new)], ac_new/ac_new[0],c='',alpha=0.65,edgecolor=colors[i])  # auto correlation
-    #     plt.plot(time_new[0:len(ac_new)], ac_new/ac_new[1], marker=marker[i],markerfacecolor="None", markersize=6, color=colors[i], label=label[i])# color=colors[i])  # auto correlation
-
-
-    # linear
-        time = np.around(np.arange(0, (len(ac)+1) *1 / 150, 1 / 150), decimals=3)[0:len(ac)]
-        # plt.plot(time[0:len(ac)], ac/ac[0],marker=marker[i],markerfacecolor="None", markersize=5, color=colors[i], label=label[i])# color=colors[i])  # auto correlation
-        # plt.scatter(time[0:len(ac)], ac/ac[0],alpha=0.65,marker=marker[i],c='', s=25, edgecolor=colors[i], label=label[i])  # auto correlation
-
-
-
-        CORR = ac/ac[0]
-        TAU = time[0:len(ac)]
+        TAU = time[0:len(corr)]
         if i == 0 :
             tau = TAU
         print(len(TAU),len(tau))
@@ -205,29 +180,29 @@ for j in range(len(filename)):  #3,4):    #
 
 
         if i == 0 :
-            CORR_all = CORR
-            lt = len(CORR)
+            CORR_all = corr
+            lt = len(corr)
         elif i == 1 :
             CORR_1 = CORR_all
             print(CORR_1.shape[0])
-            CORR_all = np.zeros((i + 1, max(CORR_1.shape[0],len(CORR))))
+            CORR_all = np.zeros((i + 1, max(CORR_1.shape[0],len(corr))))
             CORR_all[0,:CORR_1.shape[0]] = CORR_1
-            CORR_all[1,:len(CORR)] = CORR
-            lt = min(lt,len(CORR))
+            CORR_all[1,:len(corr)] = corr
+            lt = min(lt,len(corr))
 
         elif i > 1:
             CORR_1 = CORR_all
-            CORR_all = np.zeros((i+1,max(CORR_1.shape[1],len(CORR))))
+            CORR_all = np.zeros((i+1,max(CORR_1.shape[1],len(corr))))
             CORR_all[0:i,:CORR_1.shape[1]] = CORR_1
-            CORR_all[i,:len(CORR)] = CORR
-            lt = min(lt, len(CORR))
+            CORR_all[i,:len(corr)] = corr
+            lt = min(lt, len(corr))
 
     if len(file_n)>1:
         CORR_m = CORR_all.mean(axis=0)[:lt]
     else:
         CORR_m = CORR_all
 
-    label.append(str(filename[j])+' g')
+    label.append(str(filename[j])+' Hz')
 
     # a = np.logspace(-3,3,100)
     # a_index = []
@@ -254,29 +229,16 @@ ax.set_xlabel('$t$ (s)') #('lags')#
 time = np.around(np.arange(0, (len(v_t) ) * 1 / 150, 1 / 150), decimals=3)
 # plt.xticks(np.arange(len(v_t)), time)
 
-# # # rotational
-# ax.set_ylabel('$C_{\Delta \Theta}(t)$')
-# # ax.set_xlim((0.005, 17))
-# # ax.set_ylim((-0.5, 1.2))
-# ax.yaxis.set_major_locator(MultipleLocator(0.5))
-# ax.yaxis.set_minor_locator(MultipleLocator(0.1))
-# ax.set_xscale('log')
 
-# # translational
-ax.set_ylabel('$C_{\Delta x}(t)$')
-# ax.set_xlim((-0.01, 0.065)) # tlc
-# ax.xaxis.set_major_locator(MultipleLocator(0.02))
-# ax.xaxis.set_minor_locator(MultipleLocator(0.01))
-# ax.set_xlim((-0.01, 0.5)) # 60Hz
-# ax.xaxis.set_major_locator(MultipleLocator(0.1))
-# ax.xaxis.set_minor_locator(MultipleLocator(0.05))
-ax.set_xlim((-0.01, 10)) # 5g
+
+ax.set_xlim((0.003, 45))
 ax.set_ylim((-0.5, 1.2))
-# ax.xaxis.set_major_locator(MultipleLocator(0.05))
-# ax.xaxis.set_minor_locator(MultipleLocator(0.01))
-# ax.set_ylim((-0.6,1.15))
 # ax.yaxis.set_major_locator(MultipleLocator(0.5))
 # ax.yaxis.set_minor_locator(MultipleLocator(0.1))
+ax.set_xscale('log')
+
+ax.set_ylabel('$C_{\Delta x \Delta \Theta }(t)$')  # 'I')#
+
 
 plt.legend(label)
 leg = plt.legend(label)
